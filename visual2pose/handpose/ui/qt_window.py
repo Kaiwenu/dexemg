@@ -2,10 +2,10 @@ import cv2
 import json
 import numpy as np
 import mediapipe as mp
-
+import os
 from PyQt5 import QtGui, QtWidgets, QtCore
 from handpose.ui.plotter import HandPlotter
-
+import landmark2angle
 
 # ============================================================
 # QtCapture: Handles video input + MediaPipe processing
@@ -67,7 +67,8 @@ class QtCapture(QtWidgets.QWidget):
         if results.multi_hand_landmarks:
             lm = results.multi_hand_landmarks[0]
             pts = np.array([[l.x, l.y, l.z] for l in lm.landmark], dtype=np.float32)
-
+            # print(pts.shape)
+            current_pts = pts
             self.pose_data_ready.emit(pts)
             self.mp_draw.draw_landmarks(frame, lm, mp.solutions.hands.HAND_CONNECTIONS)
 
@@ -78,8 +79,11 @@ class QtCapture(QtWidgets.QWidget):
             # Initialize VideoWriter if needed
             if self.video_writer is None:
                 self.base_name = f"capture_{timestamp}"
+                data_dir = os.path.join(os.getcwd(), "data")
+                os.makedirs(data_dir, exist_ok=True)
+                video_path = os.path.join(data_dir, f"{self.base_name}.mp4")
                 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-                self.video_writer = cv2.VideoWriter(f"{self.base_name}.mp4", fourcc, self.fps, (w, h))
+                self.video_writer = cv2.VideoWriter(video_path, fourcc, self.fps, (w, h))
             
             self.video_writer.write(frame)
             
@@ -97,26 +101,66 @@ class QtCapture(QtWidgets.QWidget):
 
         self._display_image(frame)
 
+    # def stop_recording(self):
+    #     """Finalize video file and save JSON log"""
+    #     if not self.is_recording:
+    #         return
+            
+    #     self.is_recording = False
+        
+    #     # Save Video
+    #     if self.video_writer:
+    #         self.video_writer.release()
+    #         self.video_writer = None
+            
+    #     # Save JSON
+    #     if self.recorded_data:
+    #         with open(f"{self.base_name}_data.json", "w") as f:
+    #             json.dump(self.recorded_data, f, indent=4)
+    #         self.recorded_data = []
+        
+    #     print(f"Recording saved as {self.base_name}.mp4 and .json")
+
+    def convert2angles(self):
+        # Take first 100 frames
+        landmarks = [frame["landmarks"] for frame in self.recorded_data]
+        
+        angles = []
+        for landmark in landmarks:
+            angles.append(landmark2angle.compute_hand_angles(landmark).tolist())
+        return angles
+
     def stop_recording(self):
         """Finalize video file and save JSON log"""
         if not self.is_recording:
             return
-            
+
         self.is_recording = False
-        
+
+        # Ensure /data directory exists
+        data_dir = os.path.join(os.getcwd(), "data")
+        os.makedirs(data_dir, exist_ok=True)
+
         # Save Video
         if self.video_writer:
+            
             self.video_writer.release()
             self.video_writer = None
-            
+
         # Save JSON
         if self.recorded_data:
-            with open(f"{self.base_name}_data.json", "w") as f:
+            json_path = os.path.join(data_dir, f"{self.base_name}_landmarks.json")
+            with open(json_path, "w") as f:
                 json.dump(self.recorded_data, f, indent=4)
-            self.recorded_data = []
-        
-        print(f"Recording saved as {self.base_name}.mp4 and .json")
 
+            json_path = os.path.join(data_dir, f"{self.base_name}_angles.json")
+            angles = self.convert2angles()
+            with open(json_path, "w") as f:
+                json.dump(angles, f, indent=4)
+
+            self.recorded_data = []
+
+        print(f"Recording saved to {data_dir}/{self.base_name}.mp4 and _data.json")
     # ------------------------------------------------------------
     # Display helper
     # ------------------------------------------------------------
@@ -155,7 +199,7 @@ class ControlWindow(QtWidgets.QWidget):
     # Load model + plotter
     # ------------------------------------------------------------
     def _load_plotter(self):
-        with open("generic_hand_model.json", "r") as f:
+        with open("C:/Users/kaich/Desktop/dexemg/visual2pose/handpose/ui/generic_hand_model.json", "r") as f:
             model_data = json.load(f)
 
         plotter = HandPlotter(model_data)

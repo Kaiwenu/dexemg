@@ -10,6 +10,7 @@ from ..rest_pose import (
 )
 from ..mesh_ops import apply_corrective_transform_to_mesh
 from ..bones import MP_PARENT, MP_CHILDREN, bone_membership_weights
+# import visualization
 
 # Standard MediaPipe hand skeleton connections
 MP_CONNECTIONS = [
