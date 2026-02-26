@@ -10,24 +10,25 @@ from emg2pose.lightning import Emg2PoseModule
 import torch
 import mediapy
 
-path = r"C:\Users\kaich\Desktop\dexemg\new_data\session_1772064968_left.hdf5"
 
-# with h5py.File(path, "r") as f:
-#     g = f["emg2pose"]
-    
-#     print("Group attrs:")  
-#     print("start:", g.attrs["start"])
-#     print("end  :", g.attrs["end"])
-#     print("duration:", g.attrs["end"] - g.attrs["start"])
-#     ts = f["emg2pose"]["timeseries"]
-#     print("Number of samples:", len(ts))
+import numpy as np
 
+import numpy as np
 
-data = Emg2PoseSessionData(hdf5_path=path)
+import numpy as np
 
-session_window = data[:]
+T = 2000
+a = -1
+b = 0
 
-joint_angles = data["joint_angles"]
+joint_angles = np.zeros((T, 20))
+
+mid = (a + b) / 2
+amp = (b - a) / 2
+
+for i in range(T):
+    phase = 2 * np.pi * i / T
+    joint_angles[i, 1] = mid + amp * np.sin(phase)
 # print(joint_angles)
 joint_angles_30hz = downsample(joint_angles, native_fs=200, target_fs=10)
 
