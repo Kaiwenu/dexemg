@@ -10,17 +10,17 @@ from emg2pose.lightning import Emg2PoseModule
 import torch
 import mediapy
 
-path = r"C:\Users\kaich\Desktop\dexemg\new_data\session_1772064968_left.hdf5"
-
-# with h5py.File(path, "r") as f:
-#     g = f["emg2pose"]
+# path = r"C:\Users\kaich\Desktop\dexemg\new_data\single_finger4.hdf5"
+path = r"C:\Users\kaich\Desktop\dexemg\new_data\session_1772168949_left.hdf5"
+with h5py.File(path, "r") as f:
+    g = f["emg2pose"]
     
-#     print("Group attrs:")  
-#     print("start:", g.attrs["start"])
-#     print("end  :", g.attrs["end"])
-#     print("duration:", g.attrs["end"] - g.attrs["start"])
-#     ts = f["emg2pose"]["timeseries"]
-#     print("Number of samples:", len(ts))
+    print("Group attrs:")  
+    print("start:", g.attrs["start"])
+    print("end  :", g.attrs["end"])
+    print("duration:", g.attrs["end"] - g.attrs["start"])
+    ts = f["emg2pose"]["timeseries"]
+    print("Number of samples:", len(ts))
 
 
 data = Emg2PoseSessionData(hdf5_path=path)
