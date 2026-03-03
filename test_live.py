@@ -459,10 +459,12 @@ class Live4PanelApp(QtWidgets.QWidget):
             "joint_angles": torch.zeros((1, 20, T), dtype=torch.float32, device=self.device),
             "no_ik_failure": no_ik_failure,
         }
-
+        t0 = time.perf_counter()
         with torch.no_grad():
             preds, _, _ = self.module.forward(batch)
-
+        
+        t1 = time.perf_counter()
+        print("fwd:", t1 - t0)
         return preds[0, :, -1].detach().cpu().numpy().astype(np.float32)
 
     # ---------- plot update ----------
